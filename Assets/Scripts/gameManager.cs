@@ -7,7 +7,15 @@ using Mono.Data.SqliteClient;
 
 public class gameManager : Singleton<gameManager> {
 
+    string sql;
+    string _strDBName = "URI=file:MasterSQLite.db";
+    IDbConnection _connection;
+    IDbCommand _command;
+
+
     public float score = 0f;
+
+    public float highScore = 0f; 
 
     public Light sceneLight;
 
@@ -16,6 +24,7 @@ public class gameManager : Singleton<gameManager> {
     public Text mainTimeDisplay;
     public Text mainScoreDisplay;
     public Text gameOverTime;
+    public Text highScoreText; 
 
     public bool gameIsOver = false;
 
@@ -28,32 +37,23 @@ public class gameManager : Singleton<gameManager> {
 
     private void Start()
     {
-        //DataBase connection 
+        _connection = new SqliteConnection(_strDBName);
+        _command = _connection.CreateCommand();
 
-        string conn = "URI=file:" + Application.dataPath + "/PickAndPlaceDatabase.s3db"; //Path to database.
-        IDbConnection dbconn;
-        dbconn = (IDbConnection)new SqliteConnection(conn);
-        dbconn.Open(); //Open connection to the database.
-        IDbCommand dbcmd = dbconn.CreateCommand();
-        string sqlQuery = "SELECT value,name, randomSequence " + "FROM PlaceSequence";
-        dbcmd.CommandText = sqlQuery;
-        IDataReader reader = dbcmd.ExecuteReader();
-        while (reader.Read())
-        {
-            int value = reader.GetInt32(0);
-            string name = reader.GetString(1);
-            int rand = reader.GetInt32(2);
+        _connection.Open();
 
-            Debug.Log("value= " + value + "  name =" + name + "  random =" + rand);
-        }
-        reader.Close();
-        reader = null;
-        dbcmd.Dispose();
-        dbcmd = null;
-        dbconn.Close();
-        dbconn = null;
+      /*  sql = "select * from highscores order by score desc";
+        _command.CommandText = sql;
+        IDataReader _reader = _command.ExecuteReader();
+        while (_reader.Read())
+            Debug.Log("****** Name: " + _reader["name"] + "\tScore: " + _reader["score"]);*/
 
-        //
+       // _reader.Close();
+     //   _reader = null;
+        _command.Dispose();
+        _command = null;
+        _connection.Close();
+        _connection = null;
 
 
         gameIsOver = false;
@@ -63,9 +63,8 @@ public class gameManager : Singleton<gameManager> {
         timer = 0;
 
         if (gameOverTimeDisplay)
-        {
             gameOverTimeDisplay.SetActive(false);
-        }
+        
 
         if (gameOverDisplay)
             gameOverDisplay.SetActive(false);
@@ -76,9 +75,13 @@ public class gameManager : Singleton<gameManager> {
         if (MenuButton)
             MenuButton.SetActive(false);
 
+        if (highScoreText)
+            highScoreText.gameObject.SetActive(false);
+
         sceneLight.gameObject.SetActive(true);
 
         mainScoreDisplay.gameObject.SetActive(true);
+
         mainTimeDisplay.gameObject.SetActive(true);
 
     }
@@ -102,13 +105,31 @@ public class gameManager : Singleton<gameManager> {
 
     public void endGame()
     {
+        if(score > highScore)
+        {
+            highScore = score;
+
+            //sql = "INSERT INTO highscores (score) VALUES (highScore)";
+          // _command.CommandText = sql;
+           // _command.ExecuteNonQuery();
+        }
+
+
         gameIsOver = true;
+
+        highScoreText.text = "High Score " + highScore.ToString("0");
+
+        if (highScoreText)
+            highScoreText.gameObject.SetActive(true);
 
         if(sceneLight)
             sceneLight.gameObject.SetActive(false);
 
         if(mainScoreDisplay)
-            mainScoreDisplay.gameObject.SetActive(false); 
+            mainScoreDisplay.gameObject.SetActive(false);
+
+        if (mainTimeDisplay)
+            mainTimeDisplay.gameObject.SetActive(false);
 
         if(gameOverTime)
             gameOverTime.text = timer.ToString("0"); 
