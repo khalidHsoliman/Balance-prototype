@@ -109,9 +109,9 @@ public class gameManager : Singleton<gameManager> {
         {
             highScore = score;
 
-            //sql = "INSERT INTO highscores (score) VALUES (highScore)";
-          // _command.CommandText = sql;
-           // _command.ExecuteNonQuery();
+            sql = "INSERT INTO highscores (score) VALUES ('highScore')";
+            _command.CommandText = sql;
+           _command.ExecuteNonQuery();
         }
 
 
